@@ -25,21 +25,25 @@ const validateDefinition = ajv.compile(labwareSchema)
 // TODO(mc, 2019-10-21): this code is somewhat duplicated with stuff in
 // shared-data, but the shared-data validation function isn't geared towards
 // this use case because it either throws or passes invalid files; align them
-const validateLabwareDefinition = (data: any): DefinedError[] | null => {
-  validateDefinition(data)
-  return validateDefinition.errors
+const validateLabwareDefinition = (
+  data: any
+): {| errors: Array<DefinedError>, definition: LabwareDefinition2 | null |} => {
+  const valid = validateDefinition(data)
+  return {
+    definition: valid ? data : null,
+    errors: validateDefinition.errors,
+  }
 }
 
 // validate a collection of unchecked labware files
 export function validateLabwareFiles(
   files: Array<UncheckedLabwareFile>
-): Array<CheckedLabwareFile> {
+): Array<CheckedLabwareFile | MarcelLabwareFile> {
   const validated = files.map<CheckedLabwareFile>(file => {
     const { filename, data, modified } = file
 
     // check file against the schema
-    const errors = validateLabwareDefinition(data)
-    const definition = errors ? null : data
+    const { definition, errors } = validateLabwareDefinition(data)
 
     if (errors) {
       return { filename, modified, type: INVALID_LABWARE_FILE, errors }
@@ -47,7 +51,7 @@ export function validateLabwareFiles(
 
     const props = { filename, modified, definition }
 
-    return definition.namespace !== 'opentrons'
+    return definition?.namespace !== 'opentrons'
       ? ({ ...props, type: VALID_LABWARE_FILE }: ValidLabwareFile)
       : ({ ...props, type: OPENTRONS_LABWARE_FILE }: OpentronsLabwareFile)
   })
