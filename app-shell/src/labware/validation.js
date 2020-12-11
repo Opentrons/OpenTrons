@@ -38,7 +38,7 @@ const validateLabwareDefinition = (
 // validate a collection of unchecked labware files
 export function validateLabwareFiles(
   files: Array<UncheckedLabwareFile>
-): Array<CheckedLabwareFile | MarcelLabwareFile> {
+): Array<CheckedLabwareFile> {
   const validated = files.map<CheckedLabwareFile>(file => {
     const { filename, data, modified } = file
 
