@@ -36,7 +36,7 @@ export type LabwareItemProps = {|
 
 export function LabwareItem(props: LabwareItemProps): React.Node {
   const { file } = props
-  const { type, filename, modified, definition = null } = file
+  const { type, filename, modified, definition = null, errors = null } = file
   const apiName = definition?.parameters.loadName || NA
   const displayName = definition?.metadata.displayName || NA
   const displayCategory = definition
@@ -70,6 +70,12 @@ export function LabwareItem(props: LabwareItemProps): React.Node {
           <div className={styles.item_warning_wrapper}>
             <Warning>
               <p>{warning}</p>
+              {errors &&
+                errors.map(({ dataPath, message }) => (
+                  <p>
+                    {dataPath} {message}
+                  </p>
+                ))}
             </Warning>
           </div>
         )}
