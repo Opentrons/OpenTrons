@@ -55,3 +55,38 @@ dev-shell:
 	wait-on http-get://localhost:$(PORT)
 	$(MAKE) -C $(shell_dir) dev
 
+# end-to-end tests
+#####################################################################
+
+.PHONY: docker-emulator
+docker-emulator:
+	docker-compose down
+	docker-compose up --build
+
+.PHONY: external-browser-app
+external-browser-app:
+	$(MAKE) dev OT_APP_UI__EXTERNAL_BROWSER=1
+
+.PHONY: test-cypress
+test-cypress:
+	wait-on http://localhost:$(PORT) && \
+	wait-on http-get://localhost:31950/openapi.json && \
+	cypress run --browser electron --record false
+
+.PHONY: test-e2e
+test-e2e:
+	concurrently --kill-others --names "emulator,app,tests" \
+		"$(MAKE) docker-emulator" \
+		"$(MAKE) external-browser-app" \
+		"$(MAKE) test-cypress"
+
+.PHONY: cypress-visual
+cypress-visual:
+	cypress open
+
+.PHONY: visual
+visual:
+	concurrently --kill-others --names "emulator,app,tests" \
+		"$(MAKE) docker-emulator" \
+		"$(MAKE) external-browser-app" \
+		"$(MAKE) cypress-visual"
